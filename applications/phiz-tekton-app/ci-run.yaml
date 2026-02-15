@@ -1,14 +1,21 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  name: phiz-app-run
+  generateName: phiz-app-ci-run-
   namespace: tekton-pipelines
 spec:
   pipelineRef:
-    name: phiz-app-pipeline
+    name: ci-template
 
   taskRunTemplate:
-    serviceAccountName: tekton-ecr-sa
+    serviceAccountName: tekton-git-sa
+
+  params:
+    - name: REPO_URL
+      value: git@github.com:rock02/phiz-tekton-poc-app.git
+
+    - name: IMAGE_REPO
+      value: 111546515233.dkr.ecr.us-east-1.amazonaws.com/phiz-tekton-app
 
   workspaces:
     - name: shared-data

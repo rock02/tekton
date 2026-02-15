@@ -1,0 +1,24 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: phiz-app-cd-run-
+  namespace: tekton-pipelines
+spec:
+  pipelineRef:
+    name: cd-template
+
+  taskRunTemplate:
+    serviceAccountName: tekton-ecr-sa
+
+  params:
+    - name: IMAGE_REPO
+      value: 111546515233.dkr.ecr.us-east-1.amazonaws.com/phiz-tekton-app
+
+    - name: IMAGE_TAG
+      value: ff92a6373428c1e11ceef8a016ff49bc725923b4
+
+    - name: DEPLOYMENT_NAME
+      value: phiz-tekton-app
+
+    - name: TARGET_NAMESPACE
+      value: default

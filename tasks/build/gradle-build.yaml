@@ -19,6 +19,9 @@ spec:
         #!/bin/sh
         set -e
         chmod +x ./gradlew || true
+
+        git config --global --add safe.directory $(workspaces.source.path)
+        
         ./gradlew build --no-daemon
 
         JAR=$(ls build/libs/*.jar | head -n 1)

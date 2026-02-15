@@ -1,0 +1,30 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: deploy-app
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: IMAGE
+      type: string
+    - name: DEPLOYMENT_NAME
+      type: string
+    - name: NAMESPACE
+      type: string
+
+  steps:
+    - name: deploy
+      image: bitnami/kubectl:latest
+      script: |
+        #!/bin/sh
+        set -e
+
+        echo "Deployando imagem: $(params.IMAGE)"
+
+        kubectl set image deployment/$(params.DEPLOYMENT_NAME) \
+        app=$(params.IMAGE) \
+        -n $(params.NAMESPACE)
+
+        kubectl rollout status deployment/$(params.DEPLOYMENT_NAME) \
+        -n $(params.NAMESPACE)
+

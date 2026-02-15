@@ -1,0 +1,27 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: cd-template
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: IMAGE_REPO
+      type: string
+    - name: IMAGE_TAG
+      type: string
+    - name: DEPLOYMENT_NAME
+      type: string
+    - name: TARGET_NAMESPACE
+      type: string
+
+  tasks:
+    - name: deploy
+      taskRef:
+        name: deploy-app
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE_REPO):$(params.IMAGE_TAG)
+        - name: DEPLOYMENT_NAME
+          value: $(params.DEPLOYMENT_NAME)
+        - name: NAMESPACE
+          value: $(params.TARGET_NAMESPACE)
