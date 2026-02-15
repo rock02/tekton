@@ -1,11 +1,11 @@
 apiVersion: tekton.dev/v1
 kind: PipelineRun
 metadata:
-  name: clone-run
+  name: phiz-app-run
   namespace: tekton-pipelines
 spec:
   pipelineRef:
-    name: clone-pipeline
+    name: phiz-app-pipeline
 
   taskRunTemplate:
     serviceAccountName: tekton-ecr-sa
@@ -18,7 +18,7 @@ spec:
             - ReadWriteOnce
           resources:
             requests:
-              storage: 1Gi
+              storage: 2Gi
 
     - name: git-credentials
       secret:

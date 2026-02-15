@@ -1,0 +1,95 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: phiz-app-pipeline
+  namespace: tekton-pipelines
+spec:
+  workspaces:
+    - name: shared-data
+    - name: git-credentials
+
+  params:
+    - name: IMAGE_REPO
+      type: string
+      default: 111546515233.dkr.ecr.us-east-1.amazonaws.com/phiz-tekton-app
+
+  tasks:
+
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-data
+        - name: ssh-directory
+          workspace: git-credentials
+      params:
+        - name: url
+          value: git@github.com:rock02/phiz-tekton-poc-app.git
+        - name: revision
+          value: master
+        - name: deleteExisting
+          value: "true"
+
+    - name: extract-sha
+      runAfter:
+        - clone-repo
+      taskSpec:
+        workspaces:
+          - name: source
+        results:
+          - name: commit
+        steps:
+          - name: get-sha
+            image: alpine/git
+            workingDir: $(workspaces.source.path)
+            script: |
+              #!/bin/sh
+              SHA=$(git rev-parse --short HEAD)
+              echo -n "$SHA" > $(results.commit.path)
+      workspaces:
+        - name: source
+          workspace: shared-data
+
+    - name: build-app
+      runAfter:
+        - extract-sha
+      taskRef:
+        name: gradle-build
+      workspaces:
+        - name: source
+          workspace: shared-data
+
+    # - name: test-app
+    #   runAfter:
+    #     - build-app
+    #   taskRef:
+    #     name: gradle-test
+    #   workspaces:
+    #     - name: source
+    #       workspace: shared-data
+
+    - name: build-image
+      runAfter:
+        - build-app
+      taskRef:
+        name: kaniko-aws
+      params:
+        - name: IMAGE_REPO
+          value: 111546515233.dkr.ecr.us-east-1.amazonaws.com/phiz-tekton-app
+        - name: IMAGE_TAG
+          value: $(tasks.clone-repo.results.commit)
+      workspaces:
+        - name: source
+          workspace: shared-data
+
+    - name: deploy
+      runAfter:
+        - build-image
+      taskRef:
+        name: deploy-app
+      params:
+        - name: IMAGE_REPO
+          value: $(params.IMAGE_REPO)
+        - name: IMAGE_TAG
+          value: $(tasks.clone-repo.results.commit)

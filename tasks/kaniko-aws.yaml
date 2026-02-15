@@ -5,7 +5,9 @@ metadata:
   namespace: tekton-pipelines
 spec:
   params:
-    - name: IMAGE
+    - name: IMAGE_REPO
+      type: string
+    - name: IMAGE_TAG
       type: string
 
   workspaces:
@@ -16,9 +18,9 @@ spec:
       image: gcr.io/kaniko-project/executor:v1.22.0
       workingDir: $(workspaces.source.path)
       args:
-        - --dockerfile=$(workspaces.source.path)/Dockerfile
+        - --dockerfile=Dockerfile
         - --context=$(workspaces.source.path)
-        - --destination=$(params.IMAGE)
+        - --destination=$(params.IMAGE_REPO):$(params.IMAGE_TAG)
         - --snapshot-mode=redo
       volumeMounts:
         - name: dockerconfig

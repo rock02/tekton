@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: tekton-deployer
+  namespace: default
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get","list","watch","patch","update"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: tekton-deployer-binding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: tekton-ecr-sa
+    namespace: tekton-pipelines
+roleRef:
+  kind: Role
+  name: tekton-deployer
+  apiGroup: rbac.authorization.k8s.io
