@@ -1,0 +1,34 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: kaniko-aws
+  namespace: tekton-pipelines
+spec:
+  params:
+    - name: IMAGE
+      type: string
+
+  workspaces:
+    - name: source
+
+  steps:
+    - name: build-and-push
+      image: gcr.io/kaniko-project/executor:v1.22.0
+      workingDir: $(workspaces.source.path)
+      args:
+        - --dockerfile=$(workspaces.source.path)/Dockerfile
+        - --context=$(workspaces.source.path)
+        - --destination=$(params.IMAGE)
+        - --snapshot-mode=redo
+      volumeMounts:
+        - name: dockerconfig
+          mountPath: /kaniko/.docker
+          readOnly: true
+
+  volumes:
+    - name: dockerconfig
+      secret:
+        secretName: ecr-dockerconfig
+        items:
+          - key: .dockerconfigjson
+            path: config.json

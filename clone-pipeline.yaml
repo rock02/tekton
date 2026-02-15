@@ -1,0 +1,47 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: clone-pipeline
+  namespace: tekton-pipelines
+spec:
+  workspaces:
+    - name: shared-data
+    - name: git-credentials
+
+  tasks:
+    - name: clone-repo
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-data
+        - name: ssh-directory
+          workspace: git-credentials
+      params:
+        - name: url
+          value: git@github.com:rock02/phiz-tekton-poc-app.git
+        - name: revision
+          value: master
+        - name: deleteExisting
+          value: "true"
+
+    - name: build-app
+      runAfter:
+        - clone-repo
+      taskRef:
+        name: gradle-build
+      workspaces:
+        - name: source
+          workspace: shared-data
+
+    - name: build-image
+      runAfter:
+        - build-app
+      taskRef:
+        name: kaniko-aws
+      params:
+        - name: IMAGE
+          value: 111546515233.dkr.ecr.us-east-1.amazonaws.com/phiz-tekton-app:$(tasks.clone-repo.results.commit)
+      workspaces:
+        - name: source
+          workspace: shared-data

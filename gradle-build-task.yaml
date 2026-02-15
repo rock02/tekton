@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: gradle-build
+  namespace: tekton-pipelines
+spec:
+  workspaces:
+    - name: source
+
+  results:
+    - name: jar-path
+      description: Caminho do JAR gerado
+
+  steps:
+    - name: build
+      image: gradle:8.6-jdk21
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -e
+
+        echo "Executando build..."
+        chmod +x ./gradlew || true
+        ./gradlew build --no-daemon
+
+        JAR=$(ls build/libs/*.jar | head -n 1)
+
+        echo "JAR encontrado: $JAR"
+        echo -n "$JAR" > $(results.jar-path.path)
+        
+    - name: debug-artifacts
+      image: alpine
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        echo "Listando build/libs:"
+        ls -la build/libs || true

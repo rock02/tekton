@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tekton-git-sa
+  namespace: tekton-pipelines
+secrets:
+  - name: git-ssh-key
